@@ -1,0 +1,22 @@
+{
+    "name": "spa_mall",
+    "version": "1.0.0",
+    "main": "app.js",
+    "scripts": {
+        "start": "nodemon",
+        "dev": "nodemon --watch ./ ./app.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "format": "prettier --write *.js **/*.js"
+    },
+    "type": "module",
+    "license": "MIT",
+    "dependencies": {
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "joi": "^17.13.1",
+        "mongoose": "^8.3.4"
+    },
+    "devDependencies": {
+        "prettier": "^3.2.5"
+    }
+}
