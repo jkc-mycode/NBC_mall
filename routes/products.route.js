@@ -60,7 +60,7 @@ router.get('/products', async (req, res, next) => {
     return res.status(200).json({ status: 200, message: '상품 목록 조회에 성공했습니다.', data: productsList });
 });
 
-// 상품 상세 조회
+// 상품 상세 조회 API
 router.get('/products/:productId', async (req, res, next) => {
     // url에서 productId 값 가져오기
     const { productId } = req.params;
@@ -69,6 +69,24 @@ router.get('/products/:productId', async (req, res, next) => {
     const product = await Products.findById(productId, { password: 0 }).exec();
 
     return res.status(200).json({ status: 200, message: '상품 상세 조회에 성공했습니다.', data: product });
+});
+
+// 상품 정보 수정 API (patch는 일부 수정할 때 사용)
+router.patch('/products/:productId', async (req, res, next) => {
+    try {
+        const { productId } = req.params;
+    } catch (err) {
+        next(err);
+    }
+});
+
+// 상품 정보 삭제 API
+router.delete('/products/:productID', async (req, res, next) => {
+    try {
+        const { productId } = req.params;
+    } catch (err) {
+        next(err);
+    }
 });
 
 export default router;
