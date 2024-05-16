@@ -55,7 +55,7 @@ router.post('/products', async (req, res, next) => {
 // 상품 목록 조회 API
 router.get('/products', async (req, res, next) => {
     // 데이터베이스에서 상품 목록 데이터 가져오기 (password는 빼고)
-    const productsList = await Products.find({}, { password: 0 }).sort('createdAt').exec();
+    const productsList = await Products.find({}, { password: 0 }).sort('-createdAt').exec();
 
     return res.status(200).json({ status: 200, message: '상품 목록 조회에 성공했습니다.', data: productsList });
 });
@@ -68,6 +68,10 @@ router.get('/products/:productId', async (req, res, next) => {
     // 데이터베이스에서 productId 값 기반으로 상품 데이터 가져오기 (password는 빼고)
     const product = await Products.findById(productId, { password: 0 }).exec();
 
+    if (!product) {
+        return res.status(404).json({ status: 404, message: '상품이 존재하지 않습니다.' });
+    }
+
     return res.status(200).json({ status: 200, message: '상품 상세 조회에 성공했습니다.', data: product });
 });
 
@@ -75,15 +79,57 @@ router.get('/products/:productId', async (req, res, next) => {
 router.patch('/products/:productId', async (req, res, next) => {
     try {
         const { productId } = req.params;
+        const { name, description, manager, status, password } = req.body;
+
+        // 비밀번호를 입력하지 않았을 때
+        if (!password) {
+            return res.status(400).json({ status: 400, message: '비밀번호 입력을 필수입니다.' });
+        }
+
+        // 데이터베이스에서 productId 기반으로 데이터 가져오기
+        const product = await Products.findById(productId).exec();
+
+        if (!product) {
+            return res.status(404).json({ status: 404, message: '상품이 존재하지 않습니다.' });
+        }
+
+        // 입력한 비밀번호와 상품 비밀번호가 같은지 확인
+        if (password !== product.password) {
+            return res.status(401).json({ status: 401, message: '비밀번호가 틀렸습니다.' });
+        }
+
+        // 상품 정보 수정
+        product.name = name ? name : product.name;
+        product.description = description ? description : product.description;
+        product.manager = manager ? manager : product.manager;
+        product.status = status ? status : product.status;
+        product.updatedAt = new Date();
+        await product.save();
+
+        // 비밀번호는 제외하고 출력하기 위해 사용
+        const copyProduct = JSON.parse(JSON.stringify(product));
+        delete copyProduct.password;
+
+        return res.status(200).json({ status: 200, message: '상품 수정에 성공했습니다.', data: copyProduct });
     } catch (err) {
         next(err);
     }
 });
 
 // 상품 정보 삭제 API
-router.delete('/products/:productID', async (req, res, next) => {
+router.delete('/products/:productId', async (req, res, next) => {
     try {
         const { productId } = req.params;
+        const product = await Products.findById(productId).exec();
+
+        if (!product) {
+            return res.status(404).json({ status: 404, message: '상품이 존재하지 않습니다.' });
+        }
+
+        // 해당 상품 삭제
+        await Products.deleteOne({ _id: productId });
+
+        return res.status(200).json({ status: 200, message: '상품 삭제에 성공했습니다.', data: { id: productId } });
     } catch (err) {
         next(err);
     }
