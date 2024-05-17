@@ -5,7 +5,7 @@
 - 프로젝트 이름 : NBC_Mall
 - 내용 : Node.js와 Express.js를 활용한 나만의 내배캠 장터 백엔드 서버 만들기
 - 구분 : 개인 프로젝트
-- 배포 : [http://mymycode.shop:3000/api/products/](http://mymycode.shop:3000/api/products/)
+- 배포 : [https://www.mymycode.shop/api/products](https://www.mymycode.shop/api/products)
 
 <br>
 
