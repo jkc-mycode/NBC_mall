@@ -56,6 +56,8 @@
 ## 3. API 명세서 (예시)
  - https://west-territory-778.notion.site/API-69097aadc880485dac4567cb7e26e423?pvs=4
 
+<br>
+
 ## 4. 주요 기능
 ### 4-1. 요구 사항 파악 및 스키마 정의
 - MongoDB 스키마 정의
