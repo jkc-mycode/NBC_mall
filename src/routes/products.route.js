@@ -108,7 +108,7 @@ router.delete('/products/:productId', checkProductMiddleware, async (req, res, n
         // 객체 구조 분해 할당
         const { password } = validation;
 
-        const product = await Products.findById(productId).exec();
+        const product = await Products.findById(productId, { password: true }).exec();
 
         // 입력한 비밀번호와 상품 비밀번호가 같은지 확인
         if (password !== product.password) {
@@ -116,9 +116,11 @@ router.delete('/products/:productId', checkProductMiddleware, async (req, res, n
         }
 
         // 해당 상품 삭제
-        await Products.deleteOne({ _id: productId });
+        const deletedProduct = await Products.findByIdAndDelete(productId);
 
-        return res.status(200).json({ status: 200, message: '상품 삭제에 성공했습니다.', data: { id: productId } });
+        return res
+            .status(200)
+            .json({ status: 200, message: '상품 삭제에 성공했습니다.', data: { id: deletedProduct.id } });
     } catch (err) {
         next(err);
     }
