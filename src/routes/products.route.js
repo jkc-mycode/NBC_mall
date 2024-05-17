@@ -40,10 +40,14 @@ router.post('/products', async (req, res, next) => {
 
 // 상품 목록 조회 API
 router.get('/products', async (req, res, next) => {
-    // 데이터베이스에서 상품 목록 데이터 가져오기 (password는 빼고)
-    const productsList = await Products.find({}, { password: 0 }).sort('-createdAt').exec();
+    try {
+        // 데이터베이스에서 상품 목록 데이터 가져오기 (password는 빼고)
+        const productsList = await Products.find({}, { password: 0 }).sort('-createdAt').exec();
 
-    return res.status(200).json({ status: 200, message: '상품 목록 조회에 성공했습니다.', data: productsList });
+        return res.status(200).json({ status: 200, message: '상품 목록 조회에 성공했습니다.', data: productsList });
+    } catch (err) {
+        next(err);
+    }
 });
 
 // 상품 상세 조회 API
