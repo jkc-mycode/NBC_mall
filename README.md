@@ -63,37 +63,37 @@
 - MongoDB 스키마 정의
 ```javascript
 import mongoose from 'mongoose';
+import { PRODUCT_STATUS } from '../constants/product.constant.js';
 
-const productsSchema = mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
+const productsSchema = mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        description: {
+            type: String,
+            required: true,
+        },
+        manager: {
+            type: String,
+            required: true,
+        },
+        password: {
+            type: String,
+            required: true,
+            select: false,
+        },
+        status: {
+            type: String,
+            required: false,
+            enum: Object.values(PRODUCT_STATUS),
+            default: PRODUCT_STATUS.FOR_SALE,
+        },
     },
-    description: {
-        type: String,
-        required: true,
-    },
-    manager: {
-        type: String,
-        required: true,
-    },
-    password: {
-        type: String,
-        required: true,
-    },
-    status: {
-        type: String,
-        required: false,
-    },
-    createdAt: {
-        type: Date,
-        required: false,
-    },
-    updatedAt: {
-        type: Date,
-        required: false,
-    },
-});
+    { timestamps: true, toJSON: { virtuals: true } },
+);
 
 export default mongoose.model('Products', productsSchema);
 ```
@@ -131,9 +131,6 @@ router.post('/products', async (req, res, next) => {
             description,
             manager,
             password,
-            status: 'FOR_SALE',
-            createdAt: new Date(),
-            updatedAt: null,
         });
         await product.save();
 
@@ -208,7 +205,7 @@ router.patch('/products/:productId', checkProductMiddleware, async (req, res, ne
         const { name, description, manager, password, status } = validation;
 
         // 데이터베이스에서 productId 기반으로 데이터 가져오기
-        const product = await Products.findById(productId).exec();
+        const product = await Products.findById(productId, { password: true }).exec();
 
         // 입력한 비밀번호와 상품 비밀번호가 같은지 확인
         if (password !== product.password) {
@@ -222,19 +219,17 @@ router.patch('/products/:productId', checkProductMiddleware, async (req, res, ne
         }
 
         // 상품 정보 수정
-        // 비밀번호를 제외한 나머지는 필수가 아니기에 기입이 되지 않으면 기본 값 사용
-        product.name = name ? name : product.name;
-        product.description = description ? description : product.description;
-        product.manager = manager ? manager : product.manager;
-        product.status = status ? status : product.status;
-        product.updatedAt = new Date();
-        await product.save();
+        const productInfo = {
+            ...(name && { name }),
+            ...(description && { description }),
+            ...(manager && { manager }),
+            ...(status && { status }),
+        };
 
-        // 비밀번호는 제외하고 출력하기 위해 사용
-        const copyProduct = JSON.parse(JSON.stringify(product));
-        delete copyProduct.password;
+        // 상품 정보 갱신
+        const updatedProduct = await Products.findByIdAndUpdate(productId, productInfo, { new: true });
 
-        return res.status(200).json({ status: 200, message: '상품 수정에 성공했습니다.', data: copyProduct });
+        return res.status(200).json({ status: 200, message: '상품 수정에 성공했습니다.', data: updatedProduct });
     } catch (err) {
         next(err);
     }
@@ -249,6 +244,35 @@ router.patch('/products/:productId', checkProductMiddleware, async (req, res, ne
 - **비밀번호를 Request body(req.body)로** 전달 받음
 
 - 삭제할 상품과 **비밀번호 일치 여부**를 확인
+```javascript
+// 상품 정보 삭제 API
+router.delete('/products/:productId', checkProductMiddleware, async (req, res, next) => {
+    try {
+        const { productId } = req.params;
+
+        // 유효성 검사를 마친후 상품 객체를 반환 받음
+        const validation = await deleteSchema.validateAsync(req.body);
+        // 객체 구조 분해 할당
+        const { password } = validation;
+
+        const product = await Products.findById(productId, { password: true }).exec();
+
+        // 입력한 비밀번호와 상품 비밀번호가 같은지 확인
+        if (password !== product.password) {
+            return res.status(401).json({ status: 401, message: '비밀번호가 일치하지 않습니다.' });
+        }
+
+        // 해당 상품 삭제
+        const deletedProduct = await Products.findByIdAndDelete(productId);
+
+        return res
+            .status(200)
+            .json({ status: 200, message: '상품 삭제에 성공했습니다.', data: { id: deletedProduct.id } });
+    } catch (err) {
+        next(err);
+    }
+});
+```
 
 
 <br>
@@ -262,7 +286,7 @@ export default async (req, res, next) => {
     const { productId } = req.params;
 
     try {
-        const product = await Products.findById(productId).exec();
+        const product = await Products.findById(productId, { password: true }).exec();
 
         if (!product) {
             return res.status(404).json({ status: 404, message: '상품이 존재하지 않습니다.' });
@@ -272,6 +296,7 @@ export default async (req, res, next) => {
         next(err);
     }
 };
+
 ```
 
 <br>
