@@ -25,9 +25,6 @@ router.post('/products', async (req, res, next) => {
             description,
             manager,
             password,
-            status: 'FOR_SALE',
-            createdAt: new Date(),
-            updatedAt: null,
         });
         await product.save();
 
@@ -71,7 +68,7 @@ router.patch('/products/:productId', checkProductMiddleware, async (req, res, ne
         const { name, description, manager, password, status } = validation;
 
         // 데이터베이스에서 productId 기반으로 데이터 가져오기
-        const product = await Products.findById(productId).exec();
+        const product = await Products.findById(productId, { password: true }).exec();
 
         // 입력한 비밀번호와 상품 비밀번호가 같은지 확인
         if (password !== product.password) {
@@ -85,19 +82,17 @@ router.patch('/products/:productId', checkProductMiddleware, async (req, res, ne
         }
 
         // 상품 정보 수정
-        // 비밀번호를 제외한 나머지는 필수가 아니기에 기입이 되지 않으면 기본 값 사용
-        product.name = name ? name : product.name;
-        product.description = description ? description : product.description;
-        product.manager = manager ? manager : product.manager;
-        product.status = status ? status : product.status;
-        product.updatedAt = new Date();
-        await product.save();
+        const productInfo = {
+            ...(name && { name }),
+            ...(description && { description }),
+            ...(manager && { manager }),
+            ...(status && { status }),
+        };
 
-        // 비밀번호는 제외하고 출력하기 위해 사용
-        const copyProduct = JSON.parse(JSON.stringify(product));
-        delete copyProduct.password;
+        // 상품 정보 갱신
+        const updatedProduct = await Products.findByIdAndUpdate(productId, productInfo, { new: true });
 
-        return res.status(200).json({ status: 200, message: '상품 수정에 성공했습니다.', data: copyProduct });
+        return res.status(200).json({ status: 200, message: '상품 수정에 성공했습니다.', data: updatedProduct });
     } catch (err) {
         next(err);
     }

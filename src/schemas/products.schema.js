@@ -27,14 +27,6 @@ const productsSchema = mongoose.Schema(
             enum: Object.values(PRODUCT_STATUS),
             default: PRODUCT_STATUS.FOR_SALE,
         },
-        createdAt: {
-            type: Date,
-            required: false,
-        },
-        updatedAt: {
-            type: Date,
-            required: false,
-        },
     },
     { timestamps: true, toJSON: { virtuals: true } },
 );
