@@ -1,10 +1,10 @@
 {
     "name": "spa_mall",
     "version": "1.0.0",
-    "main": "app.js",
+    "main": "./src/app.js",
     "scripts": {
         "start": "nodemon",
-        "dev": "nodemon --watch ./ ./app.js",
+        "dev": "nodemon --watch ./ /src/app.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "format": "prettier --write *.js **/*.js"
     },
